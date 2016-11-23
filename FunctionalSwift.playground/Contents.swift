@@ -49,30 +49,6 @@ extension Ship {
     }
 }
 
-extension Ship {
-    func canSafelyEngage1(ship: Ship, friendly: Ship) -> Bool {
-        let dx = ship.position.x - position.x
-        let dy = ship.position.y - position.y
-        let targetDistance = sqrt(dx * dx + dy * dy)
-        let friendlyDx = friendly.position.x - ship.position.x
-        let friendlyDy = friendly.position.y - ship.position.y
-        let friendlyDistance = sqrt(friendlyDx * friendlyDx + friendlyDy * friendlyDy)
-        return targetDistance <= firingRange
-            && targetDistance > unsafeRange
-            && friendlyDistance > unsafeRange
-    }
-}
-
-extension Ship {
-    func canSafelyEngage2(ship: Ship, friendly: Ship) -> Bool {
-        let targetDistance = ship.position.minus(position).length
-        let friendlyDistance = friendly.position.minus(position).length
-        return targetDistance <= firingRange
-            && targetDistance > unsafeRange
-            && friendlyDistance > unsafeRange
-    }
-}
-
 typealias Region = (Position) -> Bool
 
 func circle(radius: Distance) -> Region {
@@ -100,5 +76,30 @@ func union(_ region1: @escaping Region, _ region2: @escaping Region) -> Region {
 }
 
 func difference(region: @escaping Region, minus: @escaping Region) -> Region {
-    return intersection(region, invert(minus))
+    return intersection(region, invert(region: minus))
 }
+
+extension Ship {
+    func canSafelyEngage1(ship: Ship, friendly: Ship) -> Bool {
+        let rangeRegion = difference(region: circle(radius: firingRange), minus: circle(radius: unsafeRange))
+        let firingRegion = shift(region: rangeRegion, offset: position)
+        let friendlyRegion = shift(region: circle(radius: unsafeRange), offset: friendly.position)
+        let resultRegion = difference(region: firingRegion, minus: friendlyRegion)
+        return resultRegion(ship.position)
+    }
+}
+
+extension Ship {
+    func canSafelyEngage2(ship: Ship, friendly: Ship) -> Bool {
+        let targetDistance = ship.position.minus(position).length
+        let friendlyDistance = friendly.position.minus(position).length
+        return targetDistance <= firingRange
+            && targetDistance > unsafeRange
+            && friendlyDistance > unsafeRange
+    }
+}
+
+let ship = Ship(position: Position(x: 5, y: 5), firingRange: 4, unsafeRange: 2)
+let target = Ship(position: Position(x: 7, y: 7), firingRange: 2, unsafeRange: 1)
+let friendly = Ship(position: Position(x: 16, y: 6), firingRange: 4, unsafeRange: 2)
+ship.canSafelyEngage1(ship: target, friendly: friendly)
