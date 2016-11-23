@@ -15,6 +15,15 @@ extension Position {
     }
 }
 
+extension Position {
+    func minus(_ p: Position) -> Position {
+        return Position(x: x - p.x, y: y - p.y)
+    }
+    var length: Double {
+        return sqrt(x * x + y * y)
+    }
+}
+
 struct Ship {
     var position: Position
     var firingRange: Distance
@@ -48,6 +57,16 @@ extension Ship {
         let friendlyDx = friendly.position.x - ship.position.x
         let friendlyDy = friendly.position.y - ship.position.y
         let friendlyDistance = sqrt(friendlyDx * friendlyDx + friendlyDy * friendlyDy)
+        return targetDistance <= firingRange
+            && targetDistance > unsafeRange
+            && friendlyDistance > unsafeRange
+    }
+}
+
+extension Ship {
+    func canSafelyEngage2(ship: Ship, friendly: Ship) -> Bool {
+        let targetDistance = ship.position.minus(position).length
+        let friendlyDistance = friendly.position.minus(position).length
         return targetDistance <= firingRange
             && targetDistance > unsafeRange
             && friendlyDistance > unsafeRange
