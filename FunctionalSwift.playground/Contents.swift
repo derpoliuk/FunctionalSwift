@@ -72,3 +72,33 @@ extension Ship {
             && friendlyDistance > unsafeRange
     }
 }
+
+typealias Region = (Position) -> Bool
+
+func circle(radius: Distance) -> Region {
+    return { point in point.length <= radius }
+}
+
+func circle(radius: Distance, center: Position) -> Region {
+    return { point in point.minus(center).length <= radius }
+}
+
+func shift(region: @escaping Region, offset: Position) -> Region {
+    return { point in region(point.minus(offset)) }
+}
+
+func invert(region: @escaping Region) -> Region {
+    return { point in !region(point) }
+}
+
+func intersection(_ region1: @escaping Region, _ region2: @escaping Region) -> Region {
+    return { point in region1(point) && region2(point) }
+}
+
+func union(_ region1: @escaping Region, _ region2: @escaping Region) -> Region {
+    return { point in region1(point) || region2(point) }
+}
+
+func difference(region: @escaping Region, minus: @escaping Region) -> Region {
+    return intersection(region, invert(minus))
+}
