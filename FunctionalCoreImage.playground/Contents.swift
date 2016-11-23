@@ -53,8 +53,28 @@ func colorOverlay(color: UIColor) -> Filter {
     }
 }
 
+func composeFilters(_ filter1: @escaping Filter, _ filter2: @escaping Filter) -> Filter {
+    return { image in filter1(filter2(image)) }
+}
+
 let blurRadius = 5.0
 let overlayColor = UIColor.green.withAlphaComponent(0.2)
-let blurredImage = blur(radius: blurRadius)(image)
-let overlayingImage = colorOverlay(color: overlayColor)(blurredImage)
-let result = colorOverlay(color: overlayColor)(blur(radius: blurRadius)(image))
+//let blurredImage = blur(radius: blurRadius)(image)
+//let overlayingImage = colorOverlay(color: overlayColor)(blurredImage)
+//let result = colorOverlay(color: overlayColor)(blur(radius: blurRadius)(image))
+
+let myFilter1 = composeFilters(blur(radius: blurRadius), colorOverlay(color: overlayColor))
+//let result = myFilter1(image)
+
+precedencegroup SomePrecendenceGroup {
+    associativity: left
+}
+
+infix operator >>> : SomePrecendenceGroup
+
+func >>>(_ filter1: @escaping Filter, _ filter2: @escaping Filter) -> Filter {
+    return { image in filter1(filter2(image)) }
+}
+
+let myFilter2 = blur(radius: blurRadius) >>> colorOverlay(color: overlayColor)
+let result = myFilter2(image)
